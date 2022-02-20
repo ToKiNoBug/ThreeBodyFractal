@@ -152,7 +152,8 @@ void mexFunction(
 
         if(outC==2) {
             outV[0]=mxCreateLogicalScalar(noCollide);
-            outV[1]=mxCreateDoubleScalar(s.getResult().back().first/year);
+            outV[1]=mxCreateDoubleScalar(std::min(s.getResult().back().first,ts.second)/year);
+            return;
         }
     }
 
