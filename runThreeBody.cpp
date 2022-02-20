@@ -116,6 +116,7 @@ void mexFunction(
     if(inC>5) {
         mexErrMsgTxt("Too much inputs!");
     }
+    
     std::clock_t c=std::clock();
     if(!checkSize(inV[0],BODY_COUNT))
         mexErrMsgTxt("The first input should be a 3 dim vector!");
