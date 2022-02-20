@@ -34,3 +34,5 @@ runThreeBody.mexw64
 BegStatue00.mat
 ThreeBodyFractal00.fig
 ThreeBodyFractal00.png
+*.fig
+*.png
