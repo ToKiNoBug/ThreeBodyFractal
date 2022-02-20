@@ -2,6 +2,12 @@
 #include "Simulator.h"
 
 
+/*
+Format:
+[Pos,Velocity,TimeQ,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan);
+[Pos,Velocity,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan,TimeQ);
+[noCollide]=runThreeBody(___);
+*/
 
 inline bool checkSize(const mxArray * mxA,int rows,int cols) {
     if (mxGetM(mxA)==rows)
@@ -19,6 +25,64 @@ inline bool checkSize(const mxArray * mxA,int Size) {
 
 static const size_t Rows=DIM_COUNT*BODY_COUNT;
 
+void storeResult(const Simulator & src,
+    const bool noCollide,
+    mxArray ** pos,
+    mxArray ** velocity,
+    mxArray ** timeQ,
+    mxArray ** noCollide_dst) {
+
+
+    const size_t Cols=src.getResult().size();
+    *pos=mxCreateDoubleMatrix(Rows,Cols,mxREAL);
+    *velocity=mxCreateDoubleMatrix(Rows,Cols,mxREAL);
+    *timeQ=mxCreateDoubleMatrix(1,Cols,mxREAL);
+        
+    Eigen::Map<Eigen::Array<double,Rows,Eigen::Dynamic>> 
+        posDst(mxGetPr(*pos),Rows,Cols);
+    Eigen::Map<Eigen::Array<double,Rows,Eigen::Dynamic>> 
+        velocityDst(mxGetPr(*velocity),Rows,Cols);
+    double * timeDst=mxGetPr(*timeQ);
+    size_t c=0;
+    for(const auto & i : src.getResult()) {
+        timeDst[c]=i.first/year;
+        for(size_t r=0;r<Rows;r++) {
+            posDst(r,c)=i.second.first(r)/rs;
+            velocityDst(r,c)=i.second.second(r)/vs;
+        }
+        c++;
+    }
+
+    *noCollide_dst=mxCreateLogicalScalar(noCollide);
+}
+
+void storeResult(const Simulator & src,
+    const bool noCollide,
+    mxArray ** pos,
+    mxArray ** velocity,
+    mxArray ** noCollide_dst) {
+
+
+    const size_t Cols=src.getResult().size();
+    *pos=mxCreateDoubleMatrix(Rows,Cols,mxREAL);
+    *velocity=mxCreateDoubleMatrix(Rows,Cols,mxREAL);
+        
+    Eigen::Map<Eigen::Array<double,Rows,Eigen::Dynamic>> 
+        posDst(mxGetPr(*pos),Rows,Cols);
+    Eigen::Map<Eigen::Array<double,Rows,Eigen::Dynamic>> 
+        velocityDst(mxGetPr(*velocity),Rows,Cols);
+    size_t c=0;
+    for(const auto & i : src.getResult()) {
+        for(size_t r=0;r<Rows;r++) {
+            posDst(r,c)=i.second.first(r)/rs;
+            velocityDst(r,c)=i.second.second(r)/vs;
+        }
+        c++;
+    }
+
+    *noCollide_dst=mxCreateLogicalScalar(noCollide);
+}
+
 void mexFunction(
     int           outC,           /* number of expected outputs */
     mxArray       *outV[],        /* array of pointers to output arguments */
@@ -26,6 +90,18 @@ void mexFunction(
     const mxArray *inV[]         /* array of pointers to input arguments */
     ) 
 {
+
+    if(inC<=0) {
+        mexPrintf("%s",
+"Format:\n \
+[Pos,Velocity,TimeQ,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan); \
+[Pos,Velocity,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan,TimeQ); \
+[noCollide]=runThreeBody(___); \
+[noCollide,lastTime]=runThreeBody(___);"
+
+        );
+    }
+
     if(inC<4) {
         //mexPrintf("%s","Fatal error : Too few inputs!\n");
         mexErrMsgTxt("Too few inputs!");
@@ -35,7 +111,7 @@ void mexFunction(
     if(inC>5) {
         mexErrMsgTxt("Too much inputs!");
     }
-
+    std::clock_t c=std::clock();
     if(!checkSize(inV[0],BODY_COUNT))
         mexErrMsgTxt("The first input should be a 3 dim vector!");
     Eigen::Map<const BodyVector> mass(mxGetPr(inV[0]));
@@ -59,41 +135,26 @@ void mexFunction(
     bool noCollide=true;
     s.simulateRK4Var1(1e-4*year,ts,Statue(begPos*rs,begVelocity*vs),&noCollide);
 
-    mexPrintf("%s","Finished\n");
+    if(std::clock()-c>=2*CLOCKS_PER_SEC)
+        mexPrintf("%s","Finished\n");
     
-/*
-Format:
-[Pos,Velocity,TimeQ,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan)
-[Pos,Velocity,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan,TimeQ)
-*/
 
     if(inC==4) {    
         //[Pos,Velocity,TimeQ,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan)
-        const size_t Cols=s.getResult().size();
-        outV[0]=mxCreateDoubleMatrix(Rows,Cols,mxREAL);
-        Eigen::Map<Eigen::Array<double,Rows,Eigen::Dynamic>> 
-            posDst(mxGetPr(outV[0]),Rows,Cols);
-        outV[1]=mxCreateDoubleMatrix(Rows,Cols,mxREAL);
-        Eigen::Map<Eigen::Array<double,Rows,Eigen::Dynamic>> 
-            velocityDst(mxGetPr(outV[1]),Rows,Cols);
-        outV[2]=mxCreateDoubleMatrix(1,Cols,mxREAL);
-        double * timeDst=mxGetPr(outV[2]);
-        size_t c=0;
-        for(const auto & i : s.getResult()) {
-            timeDst[c]=i.first/year;
-            for(size_t r=0;r<Rows;r++) {
-                posDst(r,c)=i.second.first(r)/rs;
-                velocityDst(r,c)=i.second.second(r)/vs;
-            }
-            c++;
-        }
-
-        outV[3]=mxCreateLogicalScalar(noCollide);
-
+        storeResult(s,noCollide,outV+0,outV+1,outV+2,outV+3);
         return;
     }
     else {
+        //[Pos,Velocity,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan,TimeQ)
+        const size_t Cols=mxGetNumberOfElements(inV[4]);
+        
+        mxAssert(mxGetM(inV[4])==1||mxGetN(inV[4])==1,"You should input a vector as timeQ");
+        Simulator res;
+        Eigen::Map<const Eigen::ArrayXd> tQ(mxGetPr(inV[4]),Cols);
 
+        Simulator::deval(&s,&res,tQ*year);
+        storeResult(res,noCollide,outV+0,outV+1,outV+2);
+        return;
     }
     
 }

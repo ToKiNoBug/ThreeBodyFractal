@@ -82,4 +82,6 @@ typedef  std::pair<Time,Statue> Point ;
 #error BODY_COUNT should be a positive integer not less than 2
 #endif
 
+const bool DoMotionAlign=false;
+
 #endif // DEFINES_H

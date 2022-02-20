@@ -164,7 +164,7 @@ void Simulator::simulateEuler(const double step,
                    Statue y,
                    bool * noCollide) {
     if(tSpan.second==tSpan.first) {
-        //std::cerr<<"the begging time shouldn't equal to end time\n";
+        mexErrMsgTxt("the begging time shouldn't equal to end time");
         return;
     }
 
@@ -173,7 +173,7 @@ void Simulator::simulateEuler(const double step,
     }
 
     if(tSpan.second-tSpan.first<step) {
-        //std::cerr<<"time span should be greater than time step\n";
+        mexErrMsgTxt("time span should be greater than time step");
         return;
     }
 
@@ -204,7 +204,7 @@ void Simulator::simulateEuler(const double step,
             break;
         }
 
-        sol.push_back(std::make_pair(curTime,y));
+        sol.emplace_back(std::make_pair(curTime,y));
 
         bool isOk=calculateDiff(y.first,GM,safeDistance,acc);
 
@@ -268,7 +268,7 @@ void Simulator::simulateRK4Fixed(const double step,
             break;
         }
 
-        sol.push_back(std::make_pair(curTime,y));
+        sol.emplace_back(std::make_pair(curTime,y));
 
         bool isOk=RK4(step,y,GM,safeDistance,y);
 
@@ -286,7 +286,7 @@ void Simulator::simulateRK4Fixed(const double step,
 void Simulator::simulateRK4Var1(double step,
                                 TimeSpan tSpan, Statue y, bool *noCollide) {
     if(tSpan.second==tSpan.first) {
-        //std::cerr<<"the begging time shouldn't equal to end time\n";
+        mexErrMsgTxt("the begging time shouldn't equal to end time");
         return;
     }
 
@@ -295,7 +295,7 @@ void Simulator::simulateRK4Var1(double step,
     }
 
     if(tSpan.second-tSpan.first<step) {
-        //std::cerr<<"time span should be greater than time step\n";
+        mexErrMsgTxt("time span should be greater than time step");
         return;
     }
 
@@ -320,7 +320,7 @@ void Simulator::simulateRK4Var1(double step,
     static const double ratio=std::pow(2,rank)-1;
 
     while(true) {
-        sol.push_back(std::make_pair(curTime,y));
+        sol.emplace_back(std::make_pair(curTime,y));
 
         if(curTime>tSpan.second) {
             break;
@@ -482,16 +482,16 @@ void Simulator::deval(const Simulator *source,
                           Simulator *dest,
                           const Eigen::ArrayXd & timeQueried) {
 if(source->sol.back().first<timeQueried.maxCoeff()) {
-    /*
-    std::cerr<<"Error when interploting! outerplot is invalid\n";
-    std::cerr<<"source ended at time "<<source->sol.back().first
-            <<" but quried at time "<<timeQueried.maxCoeff()<<std::endl;
-            */
+    
+    mexPrintf("%s%d%s%d\n","source ended at time ",source->sol.back().first
+            ," but quried at time ",timeQueried.maxCoeff());
+    mexErrMsgTxt("Error when interploting! outerplot is invalid");
+            
     return;
 }
 
 if(source->sol.size()<=1) {
-    //std::cerr<<"source's sol has fewer than 2 statues, can't interplot in such condition\n";
+    mexErrMsgTxt("source's sol has fewer than 2 statues, can't interplot in such condition");
     return;
 }
 
@@ -525,12 +525,13 @@ Point curP=*cur;
         double step=curTime-curP.first;
         Simulator::RK4(step,curP.second,GM,safeDistance,curP.second);
         curP.first=curTime;
-        dest->sol.push_back(curP);
+        dest->sol.emplace_back(curP);
     }
 
 }
 
 void Simulator::motionAlign(const BodyVector &mass, Velocity &velocity) {
+    if (DoMotionAlign) {
     Eigen::Tensor<double,1> massTensor(mass.size());
 
     for(uint32_t body=0;body<BODY_COUNT;body++) {
@@ -548,9 +549,11 @@ void Simulator::motionAlign(const BodyVector &mass, Velocity &velocity) {
         }
 
     }
+    }
 }
 
 void Simulator::positonAlign(Position & pos) {
+    if (DoMotionAlign) {
     for(uint16_t dim=0;dim<DIM_COUNT;dim++) {
         Eigen::Tensor<double,0> temp=pos.chip(dim,0).mean();
         double && meanPos=std::move(temp(0));
@@ -558,6 +561,7 @@ void Simulator::positonAlign(Position & pos) {
         for(uint32_t body=0;body<BODY_COUNT;body++) {
             pos(dim,body)-=meanPos;
         }
+    }
     }
 }
 
