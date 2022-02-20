@@ -92,14 +92,19 @@ void mexFunction(
 {
 
     if(inC<=0) {
-        mexPrintf("%s",
+        mexPrintf("%s\n",
 "Format:\n \
-[Pos,Velocity,TimeQ,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan); \
-[Pos,Velocity,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan,TimeQ); \
-[noCollide]=runThreeBody(___); \
-[noCollide,lastTime]=runThreeBody(___);"
+[Pos,Velocity,TimeQ,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan);\n \
+[Pos,Velocity,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan,TimeQ);\n \
+[noCollide]=runThreeBody(___);\n \
+[noCollide,lastTime]=runThreeBody(___);\n"
 
         );
+        return;
+    }
+
+    if(outC<=0) {
+        return;
     }
 
     if(inC<4) {
@@ -138,6 +143,18 @@ void mexFunction(
     if(std::clock()-c>=2*CLOCKS_PER_SEC)
         mexPrintf("%s","Finished\n");
     
+
+    if(outC<=2) {
+        if(outC==1) {
+            outV[0]=mxCreateLogicalScalar(noCollide);
+            return;
+        }
+
+        if(outC==2) {
+            outV[0]=mxCreateLogicalScalar(noCollide);
+            outV[1]=mxCreateDoubleScalar(s.getResult().back().first/year);
+        }
+    }
 
     if(inC==4) {    
         //[Pos,Velocity,TimeQ,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan)
