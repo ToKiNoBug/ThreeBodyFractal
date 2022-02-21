@@ -133,7 +133,7 @@ void mexFunction(
     s.setMass(mass*Ms);
     
     bool noCollide=true;
-    s.simulateRK4Var1(1e-4*year,ts,Statue(begPos*rs,begVelocity*vs),&noCollide);
+    s.simulateRK4Var1<true>(1e-4*year,ts,Statue(begPos*rs,begVelocity*vs),&noCollide,1e-8);
 
     if(std::clock()-c>=2*CLOCKS_PER_SEC)
         mexPrintf("%s","Finished\n");

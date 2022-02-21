@@ -68,12 +68,12 @@ public:
                           Statue,
                           bool * noCollide=nullptr);
     
-    template<bool record=true>
+    template<bool record>
     void simulateRK4Var1(double step,
                         TimeSpan tSpan, 
                         Statue y, 
                         bool *noCollide,
-                        double precision=1e-8) {
+                        double precision) {
     if(tSpan.second==tSpan.first) {
         mexErrMsgTxt("the begging time shouldn't equal to end time");
         return;
@@ -176,7 +176,6 @@ public:
         y.first=y_h_2.first+yh2_error.first;
         y.second=y_h_2.second+yh2_error.second;
         curTime+=step;
-
     }
 
     if(!record)

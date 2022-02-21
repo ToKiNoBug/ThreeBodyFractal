@@ -28,7 +28,9 @@ void mexFunction(
     if(inC<=0) {
         mexPrintf("%s\n",
 "Format:\n \
-[noCollide,lastTime]=threeBodyFast(MassVec,BegPos,BegVelocity,tSpan);\n"
+[noCollide,lastTime]=threeBodyFast(MassVec,BegPos,BegVelocity,tSpan);\n \
+[___]=threeBodyFast(___,precision);\n \
+"
         );
         return;
     }
@@ -42,9 +44,15 @@ void mexFunction(
         return;
     }
 
-    if(inC>5) {
+    if(inC>6) {
         mexErrMsgTxt("Too much inputs!");
         return;
+    }
+
+    double precison=1e-6;
+
+    if(inC==5) {
+        precison=*mxGetPr(inV[4]);
     }
 
     
@@ -70,7 +78,7 @@ void mexFunction(
     s.setMass(mass*Ms);
     
     bool noCollide=true;
-    s.simulateRK4Var1<false>(1e-4*year,ts,Statue(begPos*rs,begVelocity*vs),&noCollide,1e-4);
+    s.simulateRK4Var1<false>(1e-4*year,ts,Statue(begPos*rs,begVelocity*vs),&noCollide,precison);
 
     //mexPrintf("%s%d\n","size of result list = ",s.getResult().size());
 

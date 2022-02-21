@@ -24,7 +24,7 @@ tic
 parfor r=1:Rows
    temp_Ms3=logspace(-4,2,Cols)*MassVec(3);
    for c=1:Cols
-       [noCollideMat(r,c),lastTimeMat(r,c)]=threeBodyFast([Ms1,Ms2(r),temp_Ms3(c)],BegPos,BegVelocity,tSpan); 
+       [noCollideMat(r,c),lastTimeMat(r,c)]=threeBodyFast([Ms1,Ms2(r),temp_Ms3(c)],BegPos,BegVelocity,tSpan,1e-6); 
    end
    %disp(num2str(r))
 end

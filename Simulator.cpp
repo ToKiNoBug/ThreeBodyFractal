@@ -92,8 +92,8 @@ for(uint16_t i=0;i<BODY_COUNT;i++) {
 
         auto delta_r=pos.chip(i,1)-pos.chip(j,1);
         Eigen::Tensor<double,0> distanceT=delta_r.square().sum();
-        double && distance= std::move(distanceT(0));
-        double && distanceSqrt=std::sqrt(distance);
+        const double distance=distanceT(0);
+        const double distanceSqrt=std::sqrt(distance);
 
         realDistance(i,j)=distanceSqrt;
         realDistance(j,i)=distanceSqrt;
