@@ -86,4 +86,20 @@ const bool DoMotionAlign=false;
 
 #include <mex.h>
 
+
+inline bool checkSize(const mxArray * mxA,int rows,int cols) {
+    if (mxGetM(mxA)==rows)
+        return true;
+    if (mxGetN(mxA)==cols)
+        return true;
+    return false;
+}
+
+inline bool checkSize(const mxArray * mxA,int Size) {
+    if (mxGetNumberOfElements(mxA)==Size)
+        return true;
+    return false;
+}
+
+
 #endif // DEFINES_H
