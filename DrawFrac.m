@@ -1,7 +1,7 @@
 clear
 
-Rows=100;
-Cols=100;
+Rows=1920;
+Cols=1080;
 load('BegStatue00.mat')
 %global Ms1 Ms2 Ms3
 Ms1=1;
