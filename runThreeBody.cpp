@@ -84,19 +84,58 @@ void mexFunction(
     )
 {
 
-    if(inC<=0) {
+    if(inC<=0&&outC<=0) {
         mexPrintf("%s\n",
 "Format:\n \
 [Pos,Velocity,TimeQ,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan);\n \
 [Pos,Velocity,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan,TimeQ);\n \
 [noCollide]=runThreeBody(___);\n \
-[noCollide,lastTime]=runThreeBody(___);\n"
-
+[noCollide,lastTime]=runThreeBody(___);\n \
+[Ms,rs,vs,as,year,rho,G,omega_s]=runThreeBody();\n \
+"
         );
+        /*
+        
+extern const double G; //gravity constant
+extern const double Ms; //standard mass (solar mass)
+extern const double omega_s; //standard angle speed
+extern const double rho; //solar density
+extern const double year; //seconds of a year
+extern const double rs; //standard distance (1AU)
+extern const double vs; //standard speed
+extern const double as; //standard accelerate
+        */
+        mexPrintf("%s\n","Constants:");
+        mexPrintf("%s%f%s\n","Ms=",Ms," kg");
+        mexPrintf("%s%f%s\n","rs=",rs," m");
+        mexPrintf("%s%f%s\n","vs=",vs," m/s");
+        mexPrintf("%s%f%s\n","as=",as," m/s^2");
+        mexPrintf("%s%f%s\n","year=",year," s");
+        mexPrintf("%s%f%s\n","rho=",rho," kg/m^3");
+        mexPrintf("%s%f%s\n","G=",G," m^3/(kg*m^2)");
+        mexPrintf("%s%f%s\n","omega_s=",omega_s," s^-1");
         return;
     }
 
     if(outC<=0) {
+        return;
+    }
+
+    if(outC>8) {
+        mexErrMsgTxt("Too many outputs!");
+        return;
+    }
+
+    if(inC<=0) {    //  [Ms,rs,vs,as,year,rho,G,omega_s]=runThreeBody();
+        static const double params[]={Ms,rs,vs,as,year,rho,G,omega_s};
+        for(size_t i=1;i<=sizeof(params)/sizeof(double);i++) {
+            if(outC>=i) {
+                outV[i-1]=mxCreateDoubleScalar(params[i-1]);
+            }
+            else {
+                return;
+            }
+        }
         return;
     }
 
