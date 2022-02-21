@@ -1,7 +1,7 @@
 #ifndef SIMULATIONSTATICLIB_H
 #define SIMULATIONSTATICLIB_H
 
-#include "defines.h"
+#include "../defines.h"
 class SimulationStaticLib
 {
 public:

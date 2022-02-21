@@ -2,6 +2,8 @@
 #include "defines.h"
 #include "Simulator.h"
 
+#include "SimulationStaticLib/SimulationStaticLib.h"
+
 const size_t Rows=DIM_COUNT*BODY_COUNT;
 
 void mexFunction(
@@ -59,20 +61,17 @@ void mexFunction(
     Eigen::TensorMap<const Velocity> begVelocity(mxGetPr(inV[2]),DIM_COUNT,BODY_COUNT);
     TimeSpan ts(year**mxGetPr(inV[3]),year**(mxGetPr(inV[3])+1));
     
-    Simulator s;
+    double lastTime;
 
-    s.setMass(mass*Ms);
-    
     bool noCollide=true;
-    s.simulateRK4Var1<false>(1e-4*year,ts,Statue(begPos*rs,begVelocity*vs),&noCollide,precison);
 
-    //mexPrintf("%s%d\n","size of result list = ",s.getResult().size());
+    SimulationStaticLib::imp_threeBodyFast(mass,begPos,begVelocity,ts,precison,&noCollide,&lastTime);
 
     if(inC>=1) {
         outV[0]=mxCreateLogicalScalar(noCollide);
     }
 
     if(inC>=2) {
-        outV[1]=mxCreateDoubleScalar(std::min(s.getResult().back().first,ts.second)/year);
+        outV[1]=mxCreateDoubleScalar(lastTime);
     }
 }
