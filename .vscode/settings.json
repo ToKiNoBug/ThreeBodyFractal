@@ -1,6 +1,9 @@
 {
     "files.associations": {
         "dense": "cpp",
-        "tensor": "cpp"
+        "tensor": "cpp",
+        "*.tcc": "cpp",
+        "deque": "cpp",
+        "vector": "cpp"
     }
 }

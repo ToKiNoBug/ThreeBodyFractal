@@ -2,13 +2,6 @@
 #include "Simulator.h"
 
 
-/*
-Format:
-[Pos,Velocity,TimeQ,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan);
-[Pos,Velocity,noCollide]=runThreeBody(MassVec,BegPos,BegVelocity,tSpan,TimeQ);
-[noCollide]=runThreeBody(___);
-*/
-
 inline bool checkSize(const mxArray * mxA,int rows,int cols) {
     if (mxGetM(mxA)==rows)
         return true;
@@ -23,7 +16,7 @@ inline bool checkSize(const mxArray * mxA,int Size) {
     return false;
 }
 
-static const size_t Rows=DIM_COUNT*BODY_COUNT;
+const size_t Rows=DIM_COUNT*BODY_COUNT;
 
 void storeResult(const Simulator & src,
     const bool noCollide,
@@ -88,7 +81,7 @@ void mexFunction(
     mxArray       *outV[],        /* array of pointers to output arguments */
     int           inC,           /* number of inputs */
     const mxArray *inV[]         /* array of pointers to input arguments */
-    ) 
+    )
 {
 
     if(inC<=0) {
@@ -115,6 +108,7 @@ void mexFunction(
 
     if(inC>5) {
         mexErrMsgTxt("Too much inputs!");
+        return;
     }
     
     std::clock_t c=std::clock();

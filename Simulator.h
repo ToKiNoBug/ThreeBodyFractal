@@ -43,6 +43,7 @@ extern const double rs; //standard distance (1AU)
 extern const double vs; //standard speed
 extern const double as; //standard accelerate
 
+
 class Simulator
 {
 public:
@@ -66,11 +67,122 @@ public:
                           TimeSpan,
                           Statue,
                           bool * noCollide=nullptr);
+    
+    template<bool record=true>
+    void simulateRK4Var1(double step,
+                        TimeSpan tSpan, 
+                        Statue y, 
+                        bool *noCollide,
+                        double precision=1e-8) {
+    if(tSpan.second==tSpan.first) {
+        mexErrMsgTxt("the begging time shouldn't equal to end time");
+        return;
+    }
 
-    void simulateRK4Var1(double,
-                         TimeSpan,
-                         Statue,
-                         bool * noCollide=nullptr);
+    if(tSpan.second<tSpan.first) {
+        std::swap(tSpan.first,tSpan.second);
+    }
+
+    if(tSpan.second-tSpan.first<step) {
+        mexErrMsgTxt("time span should be greater than time step");
+        return;
+    }
+
+    clear();
+
+    positonAlign(y.first);
+    motionAlign(mass,y.second);
+
+    DistanceMat safeDistance;
+    calculateSafeDistance(mass,safeDistance);
+
+    Interaction GM;
+    calculateGM(mass,GM);
+
+    Acceleration acc;
+    Time curTime=tSpan.first;
+
+    Statue y_h,y_h_2;
+
+    static const double searchRatio=0.5;
+    static const int rank=4;
+    static const double ratio=std::pow(2,rank)-1;
+
+    while(true) {
+        if(record)
+            sol.emplace_back(std::make_pair(curTime,y));
+
+        if(curTime>tSpan.second) {
+            break;
+        }
+
+        double minStep=16*std::nextafter(curTime,curTime*2)-16*curTime;
+
+        bool isOk=true;
+
+        isOk=RK4(step,y,GM,safeDistance,y_h);
+        if(!isOk) {
+            if(noCollide!=nullptr) {
+                *noCollide=isOk;
+            }
+            //std::cerr<<"stars will collide (Line"<<__LINE__<<")\n";
+            break;
+        }
+
+        RK4(step/2,y,GM,safeDistance,y_h_2);
+
+        RK4(step/2,y_h_2,GM,safeDistance,y_h_2);
+
+        if(isErrorTolerantable(y_h,y_h_2)) {
+            //error is tolerantable, scale up until next value is untolerantable
+            while(true) {
+                step/=searchRatio;
+                //std::cerr<<"step increasing to "<<step<<std::endl;
+                RK4(step,y,GM,safeDistance,y_h);
+                RK4(step/2,y,GM,safeDistance,y_h_2);
+                RK4(step/2,y_h_2,GM,safeDistance,y_h_2);
+                if(!isErrorTolerantable(y_h,y_h_2,precision)) {
+                    step*=searchRatio;
+                    RK4(step,y,GM,safeDistance,y_h);
+                    RK4(step/2,y,GM,safeDistance,y_h_2);
+                    RK4(step/2,y_h_2,GM,safeDistance,y_h_2);
+                    break;
+                }
+            }
+        } else {
+            while(true) {
+                step*=searchRatio;
+                //std::cerr<<"step shrinking to "<<step<<std::endl;
+                if(step<=minStep) {
+                    if(noCollide!=nullptr) {
+                        *noCollide=false;
+                    }
+                    //std::cerr<<"stars will collide\n";
+                    break;
+                }
+                RK4(step,y,GM,safeDistance,y_h);
+                RK4(step/2,y,GM,safeDistance,y_h_2);
+                RK4(step/2,y_h_2,GM,safeDistance,y_h_2);
+                if(isErrorTolerantable(y_h,y_h_2,precision)) {
+                    break;
+                }
+            }
+        }
+        //std::cerr<<"step accepted ="<<step<<std::endl;
+        Statue yh2_error;
+        yh2_error.first=(y_h_2.first-y_h.first)/ratio;
+        yh2_error.second=(y_h_2.second-y_h.second)/ratio;
+
+        y.first=y_h_2.first+yh2_error.first;
+        y.second=y_h_2.second+yh2_error.second;
+        curTime+=step;
+
+    }
+
+    if(!record)
+        sol.emplace_back(std::make_pair(curTime,y));
+
+}
 
     void clear();
 

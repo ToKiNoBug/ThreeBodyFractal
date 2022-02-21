@@ -84,4 +84,6 @@ typedef  std::pair<Time,Statue> Point ;
 
 const bool DoMotionAlign=false;
 
+#include <mex.h>
+
 #endif // DEFINES_H
