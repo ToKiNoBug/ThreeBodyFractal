@@ -93,3 +93,4 @@ build-SimulationStaticLib-Desktop_Qt_6_1_0_MinGW_64_bit-Release/CMakeFiles/Targe
 build-SimulationStaticLib-Desktop_Qt_6_1_0_MinGW_64_bit-Release/qtcsettings.cmake
 build-SimulationStaticLib-Desktop_Qt_6_1_0_MinGW_64_bit-Release/Testing/Temporary/LastTest.log
 SimulationStaticLib/CMakeLists.txt.user
+*.mat
